@@ -1,0 +1,60 @@
+[project]
+name = "egl-debugging-pixi"
+version = "0.1.0"
+description = "Simple project to debug egl issues."
+authors = ["Silvio Traversaro <silvio@traversaro.it>"]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[feature.peglgears.dependencies]
+compilers = "*"
+cmake = "*"
+make = "*"
+ninja = "*"
+pkg-config = "*"
+libglvnd-devel-cos7-x86_64 = "*"
+libglvnd-opengl-cos7-x86_64 = "*"
+libglvnd-egl-cos7-x86_64 = "*"
+mesa-libgl-devel-cos7-x86_64 = "*"
+mesa-libegl-devel-cos7-x86_64 = "*"
+libglu = "*"
+
+[feature.peglgears.tasks]
+configure_peglgears = { cmd = [
+    "cmake",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX",
+    "-DBUILD_TESTING:BOOL=ON",
+    # Use the cross-platform Ninja generator
+    "-G",
+    "Ninja",
+    # The source is in the root directory
+    "-S",
+    "peglgears-verbose",
+    # We wanna build in the .build directory
+    "-B",
+    ".buildpeglgears",
+]}
+
+build_peglgears = { cmd = "cmake --build .buildpeglgears --config Release", depends_on = ["configure_peglgears"] }
+peglgears = { cmd = "./.buildpeglgears/peglgears-verbose", depends_on = ["build_peglgears"] }
+
+
+[feature.pybullet.dependencies]
+pybullet = "*"
+
+[feature.pybullet.tasks]
+pybullet = "python pybullet_egl_mwe.py"
+
+[feature.mujoco.dependencies]
+mujoco = "*"
+numpy = "*"
+mesalib = "*"
+
+[feature.mujoco.tasks]
+mujoco = "python mujoco_egl_mwe.py"
+
+[environments]
+peglgears = {features = ["peglgears"], no-default-feature = true}
+mujoco = {features = ["mujoco"], no-default-feature = true}
+pybullet = {features = ["pybullet"], no-default-feature = true}
