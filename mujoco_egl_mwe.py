@@ -1,12 +1,13 @@
 import os
-os.environ['MUJOCO_GL']='egl'
+
+os.environ["MUJOCO_GL"] = "egl"
 
 import mujoco
 import numpy as np
 
 if "MUJOCO_GL" in os.environ:
-    print(os.getenv('MUJOCO_GL'))
-    print(os.getenv('PYOPENGL_PLATFORM'))
+    print(os.getenv("MUJOCO_GL"))
+    print(os.getenv("PYOPENGL_PLATFORM"))
 
 xml = """
 <mujoco>
@@ -22,15 +23,14 @@ xml = """
 """
 
 model = mujoco.MjModel.from_xml_string(xml)
-renderer = mujoco.Renderer(model)
 data = mujoco.MjData(model)
 
-renderer.enable_depth_rendering()
+with mujoco.Renderer(model) as renderer:
+    renderer.enable_depth_rendering()
+    mujoco.mj_forward(model, data)
+    renderer.update_scene(data)
 
-mujoco.mj_forward(model, data)
-renderer.update_scene(data)
-
-depth = renderer.render()
-depth -= depth.min()
-depth /= 2 * depth[depth <= 1].mean()
-img = 255 * np.clip(depth, 0, 1)
+    depth = renderer.render()
+    depth -= depth.min()
+    depth /= 2 * depth[depth <= 1].mean()
+    img = 255 * np.clip(depth, 0, 1)
